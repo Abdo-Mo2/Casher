@@ -1,0 +1,291 @@
+You are an expert fullstack developer. Build a complete Fast Food Restaurant POS & Accounting System using only Vanilla HTML, CSS, and JavaScript on the frontend — no frameworks.
+
+---
+
+## TECH STACK
+- Frontend: Vanilla HTML + CSS + JavaScript (ES6+ modules)
+- Backend: Node.js + Express.js
+- Database: MongoDB with Mongoose
+- Libraries allowed (CDN):
+  - qrcode.js → QR code generation
+  - Chart.js → dashboard charts
+
+---
+
+## PROJECT STRUCTURE
+
+```
+/fastfood-pos
+  /frontend
+    index.html          → cashier (main POS)
+    products.html       → product management
+    dashboard.html      → statistics & reports
+    /css
+      style.css
+    /js
+      cashier.js
+      products.js
+      dashboard.js
+      api.js            → all fetch() calls in one place
+  /backend
+    /models
+      Product.js
+      Order.js
+    /routes
+      products.js
+      orders.js
+    /controllers
+      products.controller.js
+      orders.controller.js
+    server.js
+  .env
+  README.md
+```
+
+---
+
+## DESIGN SYSTEM (apply to all pages)
+
+- Background: #F9F9F9
+- Primary accent: #FF6B35 (orange)
+- Text: #1A1A1A
+- Card background: #FFFFFF with box-shadow: 0 1px 4px rgba(0,0,0,0.08)
+- Border radius: 10px on cards, 6px on buttons and inputs
+- Font: system-ui, sans-serif
+- Nav: fixed left sidebar, 220px wide, white background, icons + labels
+- Active nav item: accent color background, white text
+- Buttons: solid accent color, white text, no border, cursor pointer
+- Inputs: border 1px solid #E0E0E0, padding 8px 12px, focus border accent color
+- Keep it clean and minimal — no heavy decorations, no gradients
+
+---
+
+## SHARED LAYOUT (all 3 pages use this structure)
+
+```html
+<body>
+  <nav class="sidebar">
+    <div class="logo">🍔 FastPOS</div>
+    <a href="index.html" class="nav-item">🧾 الكاشير</a>
+    <a href="products.html" class="nav-item">📦 المنتجات</a>
+    <a href="dashboard.html" class="nav-item">📊 الإحصائيات</a>
+  </nav>
+  <main class="main-content">
+    <!-- page content here -->
+  </main>
+</body>
+```
+
+---
+
+## PAGE 1 — index.html (Cashier)
+
+Layout: two columns
+- Left (65%): product grid
+- Right (35%): cart sidebar
+
+### Product Grid
+- Fetch all products from GET /api/products
+- Render each as a card: product name (bold), price (accent color), "إضافة" button
+- CSS Grid: repeat(auto-fill, minmax(150px, 1fr))
+
+### Cart Sidebar
+- List of added items: name, quantity controls (+ / −), line total
+- Remove button per item (×)
+- Total at bottom (large, bold)
+- "تأكيد الطلب" button (full width, accent color)
+- On confirm: POST /api/orders → show receipt modal
+
+### Receipt Modal
+- Overlay (rgba black background)
+- White centered card
+- Order number, date & time
+- Items list with quantities and prices
+- Grand total
+- QR code (generated from order JSON using qrcode.js, displayed as canvas)
+- "طباعة" button → window.print()
+- "إغلاق" button
+- Print styles: hide sidebar and modal chrome, show receipt content only
+
+---
+
+## PAGE 2 — products.html (Product Management)
+
+### Top bar
+- Page title "إدارة المنتجات"
+- "إضافة منتج" button (opens add form)
+
+### Add/Edit Form (toggle visible, hidden by default)
+- Input: اسم المنتج (required)
+- Input: السعر (number, required)
+- Input: الفئة (text, e.g. برجر / مشروب / إضافات)
+- "حفظ" button → POST or PUT /api/products
+- "إلغاء" button → hide form
+
+### Products Table
+- Columns: الاسم | الفئة | السعر | إجراءات
+- Actions: "تعديل" (fills form with data) | "حذف" (DELETE with confirm dialog)
+- Fetch on page load from GET /api/products
+- Re-render table after every add/edit/delete
+
+---
+
+## PAGE 3 — dashboard.html (Statistics)
+
+### Summary Cards Row (4 cards)
+- إجمالي طلبات اليوم
+- إيرادات اليوم (بالجنيه)
+- إجمالي الطلبات الكلي
+- إجمالي الإيرادات الكلي
+- Fetch from GET /api/orders/stats
+
+### Chart
+- Bar chart using Chart.js
+- X axis: last 7 days (formatted as day/month)
+- Y axis: number of orders
+- Accent color bars (#FF6B35)
+- Fetch daily data from GET /api/orders/stats
+
+### Recent Orders Table
+- Columns: رقم الطلب | عدد الأصناف | الإجمالي | التاريخ والوقت
+- Last 20 orders, newest first
+- Fetch from GET /api/orders?limit=20
+
+---
+
+## BACKEND — server.js
+
+```js
+require('dotenv').config()
+const express = require('express')
+const mongoose = require('mongoose')
+const cors = require('cors')
+
+const app = express()
+app.use(cors())
+app.use(express.json())
+app.use(express.static('frontend'))  // serve HTML files directly
+
+app.use('/api/products', require('./routes/products'))
+app.use('/api/orders', require('./routes/orders'))
+
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => app.listen(process.env.PORT || 5000,
+    () => console.log('Server running')))
+```
+
+---
+
+## MONGODB SCHEMAS
+
+### Product (models/Product.js)
+```js
+{
+  name:      { type: String, required: true },
+  price:     { type: Number, required: true },
+  category:  { type: String, default: 'عام' },
+  createdAt: { type: Date,   default: Date.now }
+}
+```
+
+### Order (models/Order.js)
+```js
+{
+  orderNumber: { type: Number },   // auto-increment on save
+  items: [{
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+    name:      String,
+    price:     Number,
+    quantity:  Number
+  }],
+  total:     { type: Number, required: true },
+  createdAt: { type: Date, default: Date.now }
+}
+```
+
+Auto-increment orderNumber using pre-save hook:
+find the max orderNumber in collection and add 1.
+
+---
+
+## API ENDPOINTS
+
+### Products
+| Method | Endpoint            | Action         |
+|--------|---------------------|----------------|
+| GET    | /api/products       | get all        |
+| POST   | /api/products       | create         |
+| PUT    | /api/products/:id   | update         |
+| DELETE | /api/products/:id   | delete         |
+
+### Orders
+| Method | Endpoint            | Action                          |
+|--------|---------------------|---------------------------------|
+| GET    | /api/orders         | list all (supports ?limit=N)    |
+| POST   | /api/orders         | create new order                |
+| GET    | /api/orders/stats   | aggregated stats + daily counts |
+
+### /api/orders/stats response shape
+```json
+{
+  "todayCount": 12,
+  "todayRevenue": 840,
+  "totalCount": 320,
+  "totalRevenue": 21500,
+  "daily": [
+    { "date": "2024-01-10", "count": 8,  "revenue": 560 },
+    { "date": "2024-01-11", "count": 12, "revenue": 840 }
+  ]
+}
+```
+
+---
+
+## api.js (frontend — all fetch calls here)
+
+```js
+const BASE = 'http://localhost:5000/api'
+
+export const getProducts   = () => fetch(`${BASE}/products`).then(r => r.json())
+export const createProduct = (data) => fetch(`${BASE}/products`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) }).then(r => r.json())
+export const updateProduct = (id, data) => fetch(`${BASE}/products/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) }).then(r => r.json())
+export const deleteProduct = (id) => fetch(`${BASE}/products/${id}`, { method:'DELETE' }).then(r => r.json())
+
+export const createOrder   = (data) => fetch(`${BASE}/orders`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) }).then(r => r.json())
+export const getOrders     = (limit=20) => fetch(`${BASE}/orders?limit=${limit}`).then(r => r.json())
+export const getStats      = () => fetch(`${BASE}/orders/stats`).then(r => r.json())
+```
+
+---
+
+## .env
+```
+MONGO_URI=mongodb://localhost:27017/fastfood-pos
+PORT=5000
+```
+
+---
+
+## README.md — include setup steps:
+1. cd backend && npm install
+2. create .env file
+3. node server.js
+4. open browser at http://localhost:5000
+
+---
+
+## BUILD ORDER (follow this sequence strictly)
+
+1. backend: server.js + .env + npm init
+2. backend: models (Product, Order)
+3. backend: controllers (products, orders with stats aggregation)
+4. backend: routes
+5. frontend: style.css (full design system)
+6. frontend: api.js
+7. frontend: index.html + cashier.js (product grid, cart, receipt modal, QR)
+8. frontend: products.html + products.js (table, form, CRUD)
+9. frontend: dashboard.html + dashboard.js (cards, chart, recent orders)
+
+Build each step fully before moving to the next.
+Do not skip steps or combine them.
+After each file is complete, confirm it works before continuing.

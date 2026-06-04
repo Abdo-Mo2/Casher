@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الإحصائيات — FastPOS</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="logo">🍔 FastPOS</div>
+    <a href="index.html" class="nav-item">🧾 الكاشير</a>
+    <a href="products.html" class="nav-item">📦 المنتجات</a>
+    <a href="dashboard.html" class="nav-item active">📊 الإحصائيات</a>
+  </nav>
+
+  <main class="main-content">
+    <h1 class="page-title" style="margin-bottom: 24px;">الإحصائيات</h1>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">إجمالي طلبات اليوم</div>
+        <div class="value" id="today-count">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">إيرادات اليوم (بالجنيه)</div>
+        <div class="value" id="today-revenue">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">إجمالي الطلبات الكلي</div>
+        <div class="value" id="total-count">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">إجمالي الإيرادات الكلي</div>
+        <div class="value" id="total-revenue">—</div>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <h2>الطلبات — آخر 7 أيام</h2>
+      <canvas id="orders-chart"></canvas>
+    </div>
+
+    <h2 class="section-title">آخر الطلبات</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>رقم الطلب</th>
+          <th>الكاشير</th>
+          <th>عدد الأصناف</th>
+          <th>الإجمالي</th>
+          <th>التاريخ والوقت</th>
+        </tr>
+      </thead>
+      <tbody id="orders-tbody"></tbody>
+    </table>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

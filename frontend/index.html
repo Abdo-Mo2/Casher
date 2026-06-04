@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الكاشير — FastPOS</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="logo">🍔 FastPOS</div>
+    <a href="index.html" class="nav-item active">🧾 الكاشير</a>
+    <a href="products.html" class="nav-item">📦 المنتجات</a>
+    <a href="dashboard.html" class="nav-item">📊 الإحصائيات</a>
+  </nav>
+
+  <main class="main-content">
+    <div class="cashier-layout">
+      <section class="products-section">
+        <div id="category-filters" class="category-filters"></div>
+        <div id="product-grid" class="product-grid"></div>
+      </section>
+      <aside class="cart-section">
+        <div class="cart-sidebar">
+          <div class="form-group cashier-field">
+            <label for="cashier-name">اسم الكاشير *</label>
+            <input type="text" id="cashier-name" placeholder="مثال: أحمد" required>
+          </div>
+          <h2>السلة</h2>
+          <div id="cart-items" class="cart-items">
+            <p class="cart-empty">السلة فارغة</p>
+          </div>
+          <div class="cart-total">
+            <span>الإجمالي</span>
+            <span id="cart-total">0 جنيه</span>
+          </div>
+          <button id="confirm-btn" class="btn btn-full" disabled>تأكيد الطلب</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div id="receipt-modal" class="modal-overlay">
+    <div class="modal-card receipt-print">
+      <div class="receipt-header">
+        <h2>🍔 FastPOS</h2>
+        <p class="receipt-meta" id="receipt-cashier"></p>
+        <p class="receipt-meta" id="receipt-order-num"></p>
+        <p class="receipt-meta" id="receipt-datetime"></p>
+      </div>
+      <ul id="receipt-items" class="receipt-items"></ul>
+      <div class="receipt-total">
+        <span>الإجمالي</span>
+        <span id="receipt-total"></span>
+      </div>
+      <div id="qrcode"></div>
+      <div class="modal-actions no-print">
+        <button id="print-btn" class="btn">طباعة</button>
+        <button id="close-btn" class="btn btn-secondary">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/cashier.js"></script>
+</body>
+</html>
