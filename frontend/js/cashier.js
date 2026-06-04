@@ -187,11 +187,7 @@ async function confirmOrder() {
     renderCart()
     await showReceipt(order)
   } catch (err) {
-    const hint =
-      window.location.protocol === 'file:'
-        ? 'افتح الموقع من: http://localhost:5000'
-        : ''
-    await showError('فشل تأكيد الطلب', `${err.message}${hint ? '\n' + hint : ''}`)
+    await showError('فشل تأكيد الطلب', err.message)
   }
 }
 
@@ -244,7 +240,7 @@ async function init() {
     renderCategoryFilters()
     renderProducts()
   } catch {
-    productGrid.innerHTML = '<p>تعذر تحميل المنتجات. تأكد من تشغيل السيرفر.</p>'
+    productGrid.innerHTML = '<p>تعذر تحميل المنتجات من التخزين المحلي.</p>'
   }
 }
 

@@ -31,8 +31,24 @@ body {
 .logo {
   font-size: 1.25rem;
   font-weight: 700;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   padding: 0 8px;
+}
+
+.offline-badge {
+  font-size: 0.75rem;
+  color: #2e7d32;
+  background: #e8f5e9;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  display: block;
+  text-align: center;
+}
+
+.offline-badge.offline {
+  color: #e65100;
+  background: #fff3e0;
 }
 
 .nav-item {

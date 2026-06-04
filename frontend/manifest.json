@@ -1,0 +1,11 @@
+{
+  "name": "FastPOS",
+  "short_name": "FastPOS",
+  "description": "نظام كاشير مطعم — يعمل بدون إنترنت",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F9F9F9",
+  "theme_color": "#FF6B35",
+  "lang": "ar",
+  "dir": "rtl"
+}

@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>الكاشير — FastPOS</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
 </head>
 <body>
   <nav class="sidebar">
     <div class="logo">🍔 FastPOS</div>
+    <span id="offline-badge" class="offline-badge">● يعمل محلياً</span>
     <a href="index.html" class="nav-item active">🧾 الكاشير</a>
     <a href="products.html" class="nav-item">📦 المنتجات</a>
     <a href="dashboard.html" class="nav-item">📊 الإحصائيات</a>
@@ -61,6 +63,7 @@
     </div>
   </div>
 
+  <script type="module" src="js/app.js"></script>
   <script type="module" src="js/cashier.js"></script>
 </body>
 </html>

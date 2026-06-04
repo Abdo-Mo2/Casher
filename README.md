@@ -1,56 +1,39 @@
-# FastPOS — Fast Food Restaurant POS & Accounting
+# FastPOS — Fast Food Restaurant POS
 
-نظام كاشير ومحاسبة لمطعم وجبات سريعة.
+نظام كاشير يعمل **بدون MongoDB** و**بدون إنترنت** — كل البيانات تُحفظ على الجهاز (IndexedDB).
 
-## المتطلبات
+## التشغيل
 
-- Node.js
-- MongoDB ([MongoDB Atlas](https://www.mongodb.com/cloud/atlas) للنشر على Vercel)
+### الطريقة 1 — فتح الملف مباشرة
+افتح `frontend/index.html` في Chrome أو Edge.
 
-## التشغيل محلياً
-
-1. `cd backend && npm install`
-2. انسخ `backend/.env.example` إلى `backend/.env`:
-
-```
-MONGO_URI=mongodb://localhost:27017/fastfood-pos
-PORT=5000
-```
-
-3. `npm start` من مجلد `backend`
-4. افتح [http://localhost:5000](http://localhost:5000)
-
-## النشر على Vercel
-
-1. اربط المستودع: [github.com/Abdo-Mo2/Casher](https://github.com/Abdo-Mo2/Casher)
-2. في [Vercel Dashboard](https://vercel.com) → Import Project → اختر **Casher**
-3. أضف متغير البيئة:
-   - `MONGO_URI` = رابط MongoDB Atlas (مثال: `mongodb+srv://user:pass@cluster.mongodb.net/fastfood-pos`)
-4. Deploy
-
-أو من الطرفية:
-
+### الطريقة 2 — خادم محلي (للتثبيت كتطبيق + وضع offline كامل)
 ```bash
-npm install -g vercel
-vercel login
-vercel --prod
+cd frontend
+npx serve .
 ```
+ثم افتح الرابط المعروض (مثال: http://localhost:3000).
 
-عند الطلب، أضف `MONGO_URI` في إعدادات المشروع على Vercel.
+## المميزات
 
-**ملاحظة:** على Vercel تُخزَّن صور المنتجات في قاعدة البيانات (Base64). محلياً تُحفظ في `backend/uploads/`.
+- لا يحتاج Node.js ولا MongoDB على الجهاز
+- يعمل بدون إنترنت بعد التحميل الأول
+- المنتجات، الطلبات، والإحصائيات محفوظة محلياً
+- صور المنتجات تُخزَّن على الجهاز
+- اسم الكاشير إلزامي على الفاتورة
 
 ## الصفحات
 
-| الصفحة | المسار |
+| الصفحة | الملف |
 |--------|--------|
-| الكاشير | `/` أو `/index.html` |
-| المنتجات | `/products.html` |
-| الإحصائيات | `/dashboard.html` |
+| الكاشير | `index.html` |
+| المنتجات | `products.html` |
+| الإحصائيات | `dashboard.html` |
 
-## API
+## مجلد backend (اختياري)
 
-- `GET/POST /api/products` — المنتجات
-- `PUT/DELETE /api/products/:id` — تعديل / حذف
-- `GET/POST /api/orders` — الطلبات
-- `GET /api/orders/stats` — الإحصائيات
+مجلد `backend/` للتشغيل القديم مع MongoDB — **غير مطلوب** للاستخدام العادي.
+
+## GitHub
+
+[github.com/Abdo-Mo2/Casher](https://github.com/Abdo-Mo2/Casher)
