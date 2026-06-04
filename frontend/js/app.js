@@ -3,9 +3,10 @@
 
   function setOnlineStatus() {
     if (!badge) return
-    const online = navigator.onLine
-    badge.textContent = online ? '● جاهز — يعمل محلياً' : '● بدون إنترنت — يعمل محلياً'
-    badge.classList.toggle('offline', !online)
+    badge.textContent = navigator.onLine
+      ? '● جاهز — يعمل محلياً'
+      : '● بدون إنترنت — يعمل محلياً'
+    badge.classList.toggle('offline', !navigator.onLine)
   }
 
   setOnlineStatus()
@@ -13,6 +14,20 @@
   window.addEventListener('offline', setOnlineStatus)
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.register('./sw.js').catch(() => {})
+    const SW_KEY = 'fastpos_sw_v4'
+    if (!localStorage.getItem(SW_KEY)) {
+      navigator.serviceWorker.getRegistrations().then((regs) =>
+        Promise.all(regs.map((r) => r.unregister())).then(() =>
+          caches.keys().then((keys) =>
+            Promise.all(keys.map((k) => caches.delete(k))).then(() => {
+              localStorage.setItem(SW_KEY, '1')
+              location.reload()
+            })
+          )
+        )
+      )
+    } else {
+      navigator.serviceWorker.register('/sw.js').catch(() => {})
+    }
   }
 })()
