@@ -1,4 +1,4 @@
-const CACHE = 'fastpos-v2'
+const CACHE = 'fastpos-v3'
 const ASSETS = [
   './',
   './index.html',

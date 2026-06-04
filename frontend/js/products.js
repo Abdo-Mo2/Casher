@@ -1,5 +1,9 @@
 ;(function () {
   const FP = window.FastPOS
+  if (!FP) {
+    alert('خطأ: لم يتم تحميل التطبيق. تأكد من فتح http://localhost:3000')
+    return
+  }
 
   const formEl = document.getElementById('product-form')
   const form = document.getElementById('form')
@@ -11,18 +15,21 @@
   const imagePreview = document.getElementById('image-preview')
   const keywordChips = document.getElementById('keyword-chips')
   const tbody = document.getElementById('products-tbody')
+  const addBtn = document.getElementById('add-btn')
 
   let products = []
   let currentImage = ''
-  let categories = [...FP.CATEGORIES]
+  let categories = [...(FP.CATEGORIES || ['عام'])]
 
   function fillCategorySelect(selected = 'عام') {
+    if (!categorySelect) return
     categorySelect.innerHTML = categories
       .map((c) => `<option value="${c}"${c === selected ? ' selected' : ''}>${c}</option>`)
       .join('')
   }
 
   function renderKeywordChips() {
+    if (!keywordChips) return
     keywordChips.innerHTML = categories
       .map((c) => `<button type="button" class="keyword-chip" data-cat="${c}">${c}</button>`)
       .join('')
@@ -34,6 +41,7 @@
   }
 
   function showImagePreview(src) {
+    if (!imagePreview) return
     if (src) {
       imagePreview.innerHTML = `<img src="${src}" alt="معاينة">`
     } else {
@@ -42,7 +50,11 @@
   }
 
   function showForm(product = null) {
+    if (!formEl) return
     formEl.classList.add('open')
+    formEl.style.display = 'block'
+    formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+
     imageInput.value = ''
     if (product) {
       editId.value = product._id
@@ -53,19 +65,22 @@
       showImagePreview(FP.imageUrl(currentImage))
     } else {
       editId.value = ''
-      form.reset()
+      if (form) form.reset()
       fillCategorySelect()
       currentImage = ''
       showImagePreview('')
+      setTimeout(() => nameInput?.focus(), 100)
     }
   }
 
   function hideForm() {
+    if (!formEl) return
     formEl.classList.remove('open')
-    form.reset()
+    formEl.style.display = 'none'
+    if (form) form.reset()
     editId.value = ''
     currentImage = ''
-    imagePreview.innerHTML = ''
+    if (imagePreview) imagePreview.innerHTML = ''
   }
 
   function productThumb(p) {
@@ -76,6 +91,12 @@
   }
 
   function renderTable() {
+    if (!tbody) return
+    if (!products.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="5" style="text-align:center;color:#999">لا توجد منتجات — اضغط «إضافة منتج»</td></tr>'
+      return
+    }
     tbody.innerHTML = products
       .map(
         (p) => `
@@ -86,8 +107,8 @@
       <td>${p.price} جنيه</td>
       <td>
         <div class="table-actions">
-          <button class="btn btn-sm" data-edit="${p._id}">تعديل</button>
-          <button class="btn btn-sm btn-secondary" data-delete="${p._id}">حذف</button>
+          <button type="button" class="btn btn-sm" data-edit="${p._id}">تعديل</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-delete="${p._id}">حذف</button>
         </div>
       </td>
     </tr>`
@@ -121,13 +142,23 @@
     renderTable()
   }
 
-  imageInput.addEventListener('change', () => {
+  if (addBtn) {
+    addBtn.type = 'button'
+    addBtn.addEventListener('click', (e) => {
+      e.preventDefault()
+      showForm()
+    })
+  }
+
+  document.getElementById('cancel-btn')?.addEventListener('click', hideForm)
+
+  imageInput?.addEventListener('change', () => {
     const file = imageInput.files[0]
     if (file) showImagePreview(URL.createObjectURL(file))
     else showImagePreview(FP.imageUrl(currentImage))
   })
 
-  form.addEventListener('submit', async (e) => {
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault()
     const payload = {
       name: nameInput.value.trim(),
@@ -156,12 +187,15 @@
     }
   })
 
-  document.getElementById('add-btn').addEventListener('click', () => showForm())
-  document.getElementById('cancel-btn').addEventListener('click', hideForm)
-
   fillCategorySelect()
   renderKeywordChips()
-  loadProducts().catch(() => {
-    tbody.innerHTML = '<tr><td colspan="5">تعذر تحميل المنتجات</td></tr>'
+  hideForm()
+
+  loadProducts().catch((err) => {
+    console.error(err)
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="5">تعذر تحميل المنتجات</td></tr>'
+    }
+    FP.toastError?.('تعذر تحميل المنتجات')
   })
 })()

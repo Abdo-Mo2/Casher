@@ -93,11 +93,19 @@ window.FastPOS = window.FastPOS || {}
 
   async function ensureMode() {
     if (mode) return mode
+    if (!window.indexedDB) {
+      mode = 'ls'
+      return mode
+    }
     try {
-      await openDB()
+      await Promise.race([
+        openDB(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('idb timeout')), 2500))
+      ])
       mode = 'idb'
     } catch {
       mode = 'ls'
+      dbPromise = null
     }
     return mode
   }

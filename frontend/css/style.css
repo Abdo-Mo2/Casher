@@ -440,7 +440,7 @@ textarea:focus {
 }
 
 .product-form.open {
-  display: block;
+  display: block !important;
 }
 
 .form-grid {
