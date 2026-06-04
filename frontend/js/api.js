@@ -7,7 +7,11 @@ async function request(url, options = {}) {
   return data
 }
 
-export const imageUrl = (path) => (path ? `${window.location.origin}${path}` : '')
+export const imageUrl = (src) => {
+  if (!src) return ''
+  if (src.startsWith('data:') || src.startsWith('http')) return src
+  return `${window.location.origin}${src}`
+}
 
 export const getProducts = () => request(`${BASE}/products`)
 export const getCategories = () => request(`${BASE}/products/categories`)

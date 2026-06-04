@@ -1,5 +1,14 @@
 const Product = require('../models/Product')
 
+function imageFromUpload(req) {
+  if (!req.file) return null
+  if (req.file.buffer) {
+    return `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`
+  }
+  if (req.file.filename) return `/uploads/${req.file.filename}`
+  return null
+}
+
 function parseProductBody(req) {
   return {
     name: req.body.name?.trim(),
@@ -26,7 +35,8 @@ exports.create = async (req, res) => {
     const data = parseProductBody(req)
     if (!data.name) return res.status(400).json({ message: 'اسم المنتج مطلوب' })
     if (Number.isNaN(data.price)) return res.status(400).json({ message: 'السعر غير صالح' })
-    if (req.file) data.image = `/uploads/${req.file.filename}`
+    const image = imageFromUpload(req)
+    if (image) data.image = image
     const product = await Product.create(data)
     res.status(201).json(product)
   } catch (err) {
@@ -40,7 +50,8 @@ exports.update = async (req, res) => {
     if (!data.name) return res.status(400).json({ message: 'اسم المنتج مطلوب' })
     if (Number.isNaN(data.price)) return res.status(400).json({ message: 'السعر غير صالح' })
     const update = { name: data.name, price: data.price, category: data.category }
-    if (req.file) update.image = `/uploads/${req.file.filename}`
+    const image = imageFromUpload(req)
+    if (image) update.image = image
     const product = await Product.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true })
     if (!product) return res.status(404).json({ message: 'Product not found' })
     res.json(product)
