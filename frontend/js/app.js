@@ -1,16 +1,18 @@
-const badge = document.getElementById('offline-badge')
+;(function () {
+  const badge = document.getElementById('offline-badge')
 
-function setOnlineStatus() {
-  if (!badge) return
-  const online = navigator.onLine
-  badge.textContent = online ? '● متصل' : '● بدون إنترنت — يعمل محلياً'
-  badge.classList.toggle('offline', !online)
-}
+  function setOnlineStatus() {
+    if (!badge) return
+    const online = navigator.onLine
+    badge.textContent = online ? '● جاهز — يعمل محلياً' : '● بدون إنترنت — يعمل محلياً'
+    badge.classList.toggle('offline', !online)
+  }
 
-setOnlineStatus()
-window.addEventListener('online', setOnlineStatus)
-window.addEventListener('offline', setOnlineStatus)
+  setOnlineStatus()
+  window.addEventListener('online', setOnlineStatus)
+  window.addEventListener('offline', setOnlineStatus)
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {})
-}
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('./sw.js').catch(() => {})
+  }
+})()

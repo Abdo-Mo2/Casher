@@ -1,52 +1,75 @@
-import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/+esm'
+window.FastPOS = window.FastPOS || {}
 
-const swalBase = {
-  confirmButtonColor: '#FF6B35',
-  cancelButtonColor: '#E0E0E0',
-  customClass: { confirmButton: 'btn', cancelButton: 'btn btn-secondary' }
-}
+;(function () {
+  const FP = window.FastPOS
 
-export function toastSuccess(title) {
-  return Swal.fire({
-    ...swalBase,
-    icon: 'success',
-    title,
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 2500,
-    timerProgressBar: true
-  })
-}
+  function ensureUI() {
+    if (document.getElementById('fp-toast-wrap')) return
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `
+      <div id="fp-toast-wrap" class="fp-toast-wrap"></div>
+      <div id="fp-modal" class="fp-modal-overlay hidden">
+        <div class="fp-modal-card">
+          <h3 id="fp-modal-title"></h3>
+          <p id="fp-modal-text"></p>
+          <div id="fp-modal-actions" class="fp-modal-actions"></div>
+        </div>
+      </div>`
+    )
+  }
 
-export function toastError(title) {
-  return Swal.fire({
-    ...swalBase,
-    icon: 'error',
-    title,
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 3000
-  })
-}
+  function toast(icon, title, ms) {
+    ensureUI()
+    const wrap = document.getElementById('fp-toast-wrap')
+    const el = document.createElement('div')
+    el.className = `fp-toast fp-toast-${icon}`
+    el.textContent = title
+    wrap.appendChild(el)
+    setTimeout(() => el.remove(), ms)
+  }
 
-export function showError(title, text = '') {
-  return Swal.fire({ ...swalBase, icon: 'error', title, text })
-}
+  function modal({ title, text, confirmText, cancelText }) {
+    ensureUI()
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('fp-modal')
+      document.getElementById('fp-modal-title').textContent = title
+      document.getElementById('fp-modal-text').textContent = text || ''
+      const actions = document.getElementById('fp-modal-actions')
+      actions.innerHTML = ''
 
-export function showSuccess(title, text = '') {
-  return Swal.fire({ ...swalBase, icon: 'success', title, text })
-}
+      const close = (value) => {
+        overlay.classList.add('hidden')
+        resolve(value)
+      }
 
-export async function confirmDelete(title = 'هل تريد الحذف؟') {
-  const result = await Swal.fire({
-    ...swalBase,
-    title,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'نعم، احذف',
-    cancelButtonText: 'إلغاء'
-  })
-  return result.isConfirmed
-}
+      if (cancelText) {
+        const cancel = document.createElement('button')
+        cancel.type = 'button'
+        cancel.className = 'btn btn-secondary'
+        cancel.textContent = cancelText
+        cancel.onclick = () => close(false)
+        actions.appendChild(cancel)
+      }
+
+      const ok = document.createElement('button')
+      ok.type = 'button'
+      ok.className = 'btn'
+      ok.textContent = confirmText || 'حسناً'
+      ok.onclick = () => close(cancelText ? true : undefined)
+      actions.appendChild(ok)
+
+      overlay.classList.remove('hidden')
+      overlay.onclick = (e) => {
+        if (e.target === overlay) close(false)
+      }
+    })
+  }
+
+  FP.toastSuccess = (title) => toast('success', title, 2500)
+  FP.toastError = (title) => toast('error', title, 3000)
+  FP.showError = (title, text) => modal({ title, text, confirmText: 'حسناً' })
+  FP.showSuccess = (title, text) => modal({ title, text, confirmText: 'حسناً' })
+  FP.confirmDelete = (title) =>
+    modal({ title, text: '', confirmText: 'نعم، احذف', cancelText: 'إلغاء' })
+})()

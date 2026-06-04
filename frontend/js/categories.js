@@ -1,4 +1,5 @@
-export const CATEGORIES = [
+window.FastPOS = window.FastPOS || {}
+window.FastPOS.CATEGORIES = [
   'برجر',
   'مشروبات',
   'كومبو',

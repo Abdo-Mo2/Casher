@@ -1,23 +1,25 @@
-const CACHE = 'fastpos-v1'
+const CACHE = 'fastpos-v2'
 const ASSETS = [
   './',
   './index.html',
   './products.html',
   './dashboard.html',
   './css/style.css',
-  './js/app.js',
-  './js/api.js',
-  './js/db.js',
+  './manifest.json',
   './js/categories.js',
+  './js/db.js',
   './js/alerts.js',
+  './js/api.js',
+  './js/app.js',
   './js/cashier.js',
   './js/products.js',
   './js/dashboard.js',
-  './manifest.json'
+  './js/vendor/qrcode.min.js',
+  './js/vendor/chart.umd.min.js'
 ]
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)))
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)))
   self.skipWaiting()
 })
 
@@ -33,17 +35,18 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return
   e.respondWith(
-    caches.match(e.request).then((cached) => {
-      const fetched = fetch(e.request)
-        .then((res) => {
-          if (res.ok) {
-            const clone = res.clone()
-            caches.open(CACHE).then((cache) => cache.put(e.request, clone))
-          }
-          return res
-        })
-        .catch(() => cached)
-      return cached || fetched
-    })
+    caches.match(e.request).then(
+      (cached) =>
+        cached ||
+        fetch(e.request)
+          .then((res) => {
+            if (res.ok) {
+              const clone = res.clone()
+              caches.open(CACHE).then((c) => c.put(e.request, clone))
+            }
+            return res
+          })
+          .catch(() => cached)
+    )
   )
 })
