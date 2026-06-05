@@ -1,4 +1,15 @@
 ;(function () {
+  const FP = window.FastPOS
+
+  FP.applyShopBranding = function () {
+    const name = FP.getShopName()
+    document.querySelectorAll('.logo').forEach((el) => {
+      el.textContent = name === 'FastPOS' ? '🍔 FastPOS' : `🍔 ${name}`
+    })
+  }
+
+  FP.applyShopBranding()
+
   const badge = document.getElementById('offline-badge')
 
   function setOnlineStatus() {

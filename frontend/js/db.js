@@ -11,9 +11,11 @@ window.FastPOS = window.FastPOS || {}
     products: () => JSON.parse(localStorage.getItem('fp_products') || '[]'),
     orders: () => JSON.parse(localStorage.getItem('fp_orders') || '[]'),
     orderNum: () => parseInt(localStorage.getItem('fp_order_num') || '0', 10),
+    meta: () => JSON.parse(localStorage.getItem('fp_meta') || '{}'),
     setProducts: (v) => localStorage.setItem('fp_products', JSON.stringify(v)),
     setOrders: (v) => localStorage.setItem('fp_orders', JSON.stringify(v)),
-    setOrderNum: (v) => localStorage.setItem('fp_order_num', String(v))
+    setOrderNum: (v) => localStorage.setItem('fp_order_num', String(v)),
+    setMetaObj: (v) => localStorage.setItem('fp_meta', JSON.stringify(v))
   }
 
   function uid() {
@@ -129,8 +131,17 @@ window.FastPOS = window.FastPOS || {}
         LS.setProducts(list)
       } else if (store === 'orders') {
         const list = LS.orders()
-        list.push(item)
+        const i = list.findIndex((x) => x._id === item._id)
+        if (i >= 0) list[i] = item
+        else list.push(item)
         LS.setOrders(list)
+      } else if (store === 'meta') {
+        if (item.key === 'orderNumber') LS.setOrderNum(item.value)
+        else {
+          const m = LS.meta()
+          m[item.key] = item.value
+          LS.setMetaObj(m)
+        }
       }
       return item
     }
@@ -148,10 +159,22 @@ window.FastPOS = window.FastPOS || {}
     return idbRemove(store, id)
   }
 
+  function idbClear(store) {
+    return tx(store, 'readwrite').then(
+      (s) =>
+        new Promise((res, rej) => {
+          const r = s.clear()
+          r.onsuccess = () => res()
+          r.onerror = () => rej(r.error)
+        })
+    )
+  }
+
   async function getMeta(key) {
     await ensureMode()
     if (mode === 'ls') {
-      return key === 'orderNumber' ? LS.orderNum() : null
+      if (key === 'orderNumber') return LS.orderNum()
+      return LS.meta()[key] ?? null
     }
     return tx('meta', 'readonly').then(
       (s) =>
@@ -167,9 +190,41 @@ window.FastPOS = window.FastPOS || {}
     await ensureMode()
     if (mode === 'ls') {
       if (key === 'orderNumber') LS.setOrderNum(value)
+      else {
+        const m = LS.meta()
+        m[key] = value
+        LS.setMetaObj(m)
+      }
       return
     }
     return idbPut('meta', { key, value })
+  }
+
+  async function getAllMeta() {
+    await ensureMode()
+    if (mode === 'ls') {
+      return { ...LS.meta(), orderNumber: LS.orderNum() }
+    }
+    const rows = await idbGetAll('meta')
+    const out = {}
+    rows.forEach((r) => {
+      out[r.key] = r.value
+    })
+    return out
+  }
+
+  async function clearDatabase() {
+    await ensureMode()
+    if (mode === 'ls') {
+      LS.setProducts([])
+      LS.setOrders([])
+      LS.setOrderNum(0)
+      LS.setMetaObj({})
+      return
+    }
+    await idbClear('products')
+    await idbClear('orders')
+    await idbClear('meta')
   }
 
   FP.getCategoryList = () => [...FP.CATEGORIES]
@@ -275,4 +330,74 @@ window.FastPOS = window.FastPOS || {}
       reader.onerror = reject
       reader.readAsDataURL(file)
     })
+
+  FP.getSettings = async () => {
+    const shopName = (await getMeta('shopName')) || 'FastPOS'
+    return {
+      shopName,
+      shopPhone: (await getMeta('shopPhone')) || '',
+      shopAddress: (await getMeta('shopAddress')) || ''
+    }
+  }
+
+  FP.saveSettings = async (settings) => {
+    await setMeta('shopName', settings.shopName?.trim() || 'FastPOS')
+    await setMeta('shopPhone', settings.shopPhone?.trim() || '')
+    await setMeta('shopAddress', settings.shopAddress?.trim() || '')
+    localStorage.setItem('fp_shop_display', settings.shopName?.trim() || 'FastPOS')
+    return FP.getSettings()
+  }
+
+  FP.getShopName = () => localStorage.getItem('fp_shop_display') || 'FastPOS'
+
+  FP.exportBackup = async () => {
+    const products = await getAll('products')
+    const orders = await getAll('orders')
+    const meta = await getAllMeta()
+    return {
+      version: 1,
+      app: 'FastPOS',
+      exportedAt: new Date().toISOString(),
+      products,
+      orders,
+      settings: {
+        orderNumber: meta.orderNumber || 0,
+        shopName: meta.shopName || 'FastPOS',
+        shopPhone: meta.shopPhone || '',
+        shopAddress: meta.shopAddress || ''
+      }
+    }
+  }
+
+  FP.importBackup = async (data) => {
+    if (!data || !Array.isArray(data.products) || !Array.isArray(data.orders)) {
+      throw new Error('ملف النسخ الاحتياطي غير صالح')
+    }
+    await clearDatabase()
+    for (const p of data.products) await put('products', p)
+    for (const o of data.orders) await put('orders', o)
+    const s = data.settings || {}
+    if (s.orderNumber != null) await setMeta('orderNumber', s.orderNumber)
+    await FP.saveSettings({
+      shopName: s.shopName || 'FastPOS',
+      shopPhone: s.shopPhone || '',
+      shopAddress: s.shopAddress || ''
+    })
+    return {
+      products: data.products.length,
+      orders: data.orders.length
+    }
+  }
+
+  FP.downloadBackup = async () => {
+    const data = await FP.exportBackup()
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    const date = new Date().toISOString().slice(0, 10)
+    a.href = URL.createObjectURL(blob)
+    a.download = `fastpos-backup-${date}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+    return data
+  }
 })()

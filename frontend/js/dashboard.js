@@ -58,18 +58,86 @@
       .join('')
   }
 
-  Promise.all([FP.getStats(), FP.getOrders(20)])
-    .then(([stats, orders]) => {
-      document.getElementById('today-count').textContent = stats.todayCount
-      document.getElementById('today-revenue').textContent = stats.todayRevenue
-      document.getElementById('total-count').textContent = stats.totalCount
-      document.getElementById('total-revenue').textContent = stats.totalRevenue
-      renderChart(stats.daily)
-      renderOrders(orders)
-    })
-    .catch(() => {
-      FP.toastError('تعذر تحميل البيانات')
-      document.getElementById('orders-tbody').innerHTML =
-        '<tr><td colspan="5">تعذر تحميل البيانات</td></tr>'
-    })
+  function updateBackupInfo(products, orders) {
+    const el = document.getElementById('backup-info')
+    if (el) {
+      el.textContent = `البيانات الحالية: ${products} منتج، ${orders} طلب`
+    }
+  }
+
+  async function loadSettings() {
+    const s = await FP.getSettings()
+    document.getElementById('shop-name').value = s.shopName === 'FastPOS' ? '' : s.shopName
+    document.getElementById('shop-phone').value = s.shopPhone
+    document.getElementById('shop-address').value = s.shopAddress
+    FP.applyShopBranding?.()
+  }
+
+  async function loadDashboard() {
+    const [stats, orders, products] = await Promise.all([
+      FP.getStats(),
+      FP.getOrders(20),
+      FP.getProducts()
+    ])
+    document.getElementById('today-count').textContent = stats.todayCount
+    document.getElementById('today-revenue').textContent = stats.todayRevenue
+    document.getElementById('total-count').textContent = stats.totalCount
+    document.getElementById('total-revenue').textContent = stats.totalRevenue
+    renderChart(stats.daily)
+    renderOrders(orders)
+    updateBackupInfo(products.length, stats.totalCount)
+  }
+
+  document.getElementById('settings-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    try {
+      await FP.saveSettings({
+        shopName: document.getElementById('shop-name').value.trim() || 'FastPOS',
+        shopPhone: document.getElementById('shop-phone').value.trim(),
+        shopAddress: document.getElementById('shop-address').value.trim()
+      })
+      FP.toastSuccess('تم حفظ إعدادات المحل')
+      FP.applyShopBranding?.()
+    } catch (err) {
+      FP.toastError(err.message)
+    }
+  })
+
+  document.getElementById('export-backup-btn')?.addEventListener('click', async () => {
+    try {
+      const data = await FP.downloadBackup()
+      FP.toastSuccess(`تم التصدير (${data.products.length} منتج، ${data.orders.length} طلب)`)
+    } catch (err) {
+      FP.toastError(err.message)
+    }
+  })
+
+  document.getElementById('import-backup-input')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    e.target.value = ''
+
+    const ok = await FP.confirmDelete(
+      'استعادة النسخة الاحتياطية؟ سيتم استبدال كل المنتجات والطلبات الحالية.'
+    )
+    if (!ok) return
+
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+      const result = await FP.importBackup(data)
+      FP.toastSuccess(`تمت الاستعادة (${result.products} منتج، ${result.orders} طلب)`)
+      await loadSettings()
+      await loadDashboard()
+    } catch (err) {
+      FP.toastError(err.message || 'فشلت الاستعادة')
+    }
+  })
+
+  loadSettings()
+  loadDashboard().catch(() => {
+    FP.toastError('تعذر تحميل البيانات')
+    document.getElementById('orders-tbody').innerHTML =
+      '<tr><td colspan="5">تعذر تحميل البيانات</td></tr>'
+  })
 })()

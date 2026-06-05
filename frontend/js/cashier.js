@@ -158,27 +158,49 @@
     return `FastPOS|#${order.orderNumber}|${order.total}|${order.cashierName}`
   }
 
+  function formatSerial(order) {
+    return String(order.orderNumber).padStart(12, '0')
+  }
+
   function renderReceiptQR(order) {
     const qrEl = document.getElementById('qrcode')
+    const serialEl = document.getElementById('receipt-serial')
+    const serial = formatSerial(order)
+
     qrEl.innerHTML = ''
-    if (!window.QRCode) return
+    if (serialEl) serialEl.textContent = serial
+
+    if (!window.QRCode) {
+      if (serialEl) serialEl.textContent = serial
+      return
+    }
 
     try {
       new window.QRCode(qrEl, {
         text: qrPayload(order),
-        width: 128,
-        height: 128
+        width: 200,
+        height: 200
       })
+      const img = qrEl.querySelector('img')
+      const canvas = qrEl.querySelector('canvas')
+      if (img) img.alt = `طلب ${serial}`
+      if (canvas) canvas.setAttribute('aria-label', `طلب ${serial}`)
     } catch {
-      qrEl.innerHTML =
-        '<p class="qr-fallback">طلب #' +
-        order.orderNumber +
-        '<br><small>رمز QR غير متاح</small></p>'
+      qrEl.innerHTML = '<p class="qr-fallback">رمز غير متاح</p>'
     }
   }
 
   async function showReceipt(order) {
     const date = new Date(order.createdAt)
+    const shopName = FP.getShopName()
+    document.getElementById('receipt-shop-name').textContent = shopName
+    const phoneEl = document.getElementById('receipt-shop-phone')
+    const addrEl = document.getElementById('receipt-shop-address')
+    const settings = await FP.getSettings()
+    phoneEl.textContent = settings.shopPhone ? `هاتف: ${settings.shopPhone}` : ''
+    addrEl.textContent = settings.shopAddress || ''
+    phoneEl.style.display = settings.shopPhone ? 'block' : 'none'
+    addrEl.style.display = settings.shopAddress ? 'block' : 'none'
     document.getElementById('receipt-cashier').textContent = `الكاشير: ${order.cashierName}`
     document.getElementById('receipt-order-num').textContent = `طلب رقم #${order.orderNumber}`
     document.getElementById('receipt-datetime').textContent = date.toLocaleString('ar-EG')

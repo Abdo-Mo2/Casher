@@ -45,7 +45,9 @@
   <div id="receipt-modal" class="modal-overlay">
     <div class="modal-card receipt-print">
       <div class="receipt-header">
-        <h2>🍔 FastPOS</h2>
+        <h2 id="receipt-shop-name">🍔 FastPOS</h2>
+        <p class="receipt-meta" id="receipt-shop-phone"></p>
+        <p class="receipt-meta" id="receipt-shop-address"></p>
         <p class="receipt-meta" id="receipt-cashier"></p>
         <p class="receipt-meta" id="receipt-order-num"></p>
         <p class="receipt-meta" id="receipt-datetime"></p>
@@ -55,7 +57,10 @@
         <span>الإجمالي</span>
         <span id="receipt-total"></span>
       </div>
-      <div id="qrcode"></div>
+      <div class="receipt-code-block">
+        <div id="qrcode" class="receipt-qrcode"></div>
+        <p id="receipt-serial" class="receipt-serial"></p>
+      </div>
       <div class="modal-actions no-print">
         <button id="print-btn" class="btn">طباعة</button>
         <button id="close-btn" class="btn btn-secondary">إغلاق</button>

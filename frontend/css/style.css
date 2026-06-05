@@ -417,10 +417,45 @@ textarea:focus {
   margin-bottom: 16px;
 }
 
-#qrcode {
+.receipt-code-block {
+  text-align: center;
+  margin: 20px 0 8px;
+  padding: 12px 0;
+  border-top: 1px dashed #e0e0e0;
+}
+
+.receipt-qrcode {
   display: flex;
   justify-content: center;
-  margin: 16px 0;
+  align-items: center;
+  margin: 0 auto 10px;
+  width: 100%;
+  max-width: 280px;
+  min-height: 72px;
+  overflow: hidden;
+}
+
+.receipt-qrcode img,
+.receipt-qrcode canvas {
+  width: 280px !important;
+  height: 72px !important;
+  max-width: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+  display: block;
+  margin: 0 auto;
+}
+
+.receipt-serial {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  color: #1a1a1a;
+  margin: 0;
+  padding: 0 8px;
+  direction: ltr;
+  unicode-bidi: plaintext;
 }
 
 .modal-actions {
@@ -617,6 +652,42 @@ textarea:focus {
   margin-bottom: 16px;
 }
 
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.settings-card .section-title {
+  margin-bottom: 12px;
+}
+
+.settings-hint {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.backup-import-label {
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+}
+
+.backup-info {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #888;
+}
+
 .hidden {
   display: none !important;
 }
@@ -733,9 +804,14 @@ textarea:focus {
     display: none !important;
   }
 
-  #qrcode img,
-  #qrcode canvas {
-    max-width: 120px;
-    height: auto;
+  .receipt-qrcode img,
+  .receipt-qrcode canvas {
+    width: 260px !important;
+    height: 68px !important;
+  }
+
+  .receipt-serial {
+    font-size: 1rem;
+    letter-spacing: 0.3em;
   }
 }
