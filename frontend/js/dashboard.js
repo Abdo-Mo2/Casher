@@ -39,18 +39,18 @@
   function renderOrders(orders) {
     const tbody = document.getElementById('orders-tbody')
     if (!orders.length) {
-      tbody.innerHTML = '<tr><td colspan="5">لا توجد طلبات</td></tr>'
+      tbody.innerHTML = '<tr><td colspan="6">لا توجد طلبات</td></tr>'
       return
     }
     tbody.innerHTML = orders
       .map((o) => {
-        const itemCount = o.items.reduce((s, i) => s + i.quantity, 0)
         const date = new Date(o.createdAt).toLocaleString('ar-EG')
         return `
       <tr>
         <td>#${o.orderNumber}</td>
+        <td>${FP.labelOrderType(o.orderType)}</td>
+        <td>${FP.labelPayment(o.paymentType)}</td>
         <td>${o.cashierName || '—'}</td>
-        <td>${itemCount}</td>
         <td>${o.total} جنيه</td>
         <td>${date}</td>
       </tr>`
@@ -60,9 +60,17 @@
 
   function updateBackupInfo(products, orders) {
     const el = document.getElementById('backup-info')
-    if (el) {
-      el.textContent = `البيانات الحالية: ${products} منتج، ${orders} طلب`
-    }
+    if (el) el.textContent = `البيانات الحالية: ${products} منتج، ${orders} طلب`
+  }
+
+  async function loadClosingPreview() {
+    const el = document.getElementById('closing-preview')
+    if (!el || !FP.buildClosingReportHTML) return
+    const closing = await FP.getDailyClosing()
+    el.innerHTML = `
+      <p><strong>اليوم:</strong> ${closing.orderCount} طلب — ${closing.totalRevenue} جنيه</p>
+      <p class="closing-preview-mini">نقدي: ${closing.byPayment.cash} · بطاقة: ${closing.byPayment.card} · دليفري: ${closing.byPayment.delivery}</p>
+    `
   }
 
   async function loadSettings() {
@@ -86,6 +94,7 @@
     renderChart(stats.daily)
     renderOrders(orders)
     updateBackupInfo(products.length, stats.totalCount)
+    await loadClosingPreview()
   }
 
   document.getElementById('settings-form')?.addEventListener('submit', async (e) => {
@@ -116,15 +125,12 @@
     const file = e.target.files[0]
     if (!file) return
     e.target.value = ''
-
     const ok = await FP.confirmDelete(
       'استعادة النسخة الاحتياطية؟ سيتم استبدال كل المنتجات والطلبات الحالية.'
     )
     if (!ok) return
-
     try {
-      const text = await file.text()
-      const data = JSON.parse(text)
+      const data = JSON.parse(await file.text())
       const result = await FP.importBackup(data)
       FP.toastSuccess(`تمت الاستعادة (${result.products} منتج، ${result.orders} طلب)`)
       await loadSettings()
@@ -134,10 +140,36 @@
     }
   })
 
+  document.getElementById('export-csv-today')?.addEventListener('click', async () => {
+    try {
+      const n = await FP.downloadOrdersCSV('today')
+      FP.toastSuccess(`تم تصدير ${n} طلب (اليوم)`)
+    } catch (err) {
+      FP.toastError(err.message)
+    }
+  })
+
+  document.getElementById('export-csv-all')?.addEventListener('click', async () => {
+    try {
+      const n = await FP.downloadOrdersCSV('all')
+      FP.toastSuccess(`تم تصدير ${n} طلب`)
+    } catch (err) {
+      FP.toastError(err.message)
+    }
+  })
+
+  document.getElementById('print-closing-btn')?.addEventListener('click', async () => {
+    try {
+      await FP.printDailyClosing()
+    } catch (err) {
+      FP.toastError(err.message)
+    }
+  })
+
   loadSettings()
   loadDashboard().catch(() => {
     FP.toastError('تعذر تحميل البيانات')
     document.getElementById('orders-tbody').innerHTML =
-      '<tr><td colspan="5">تعذر تحميل البيانات</td></tr>'
+      '<tr><td colspan="6">تعذر تحميل البيانات</td></tr>'
   })
 })()

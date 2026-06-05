@@ -275,12 +275,52 @@ window.FastPOS = window.FastPOS || {}
       _id: uid(),
       orderNumber,
       cashierName,
+      paymentType: data.paymentType || 'cash',
+      orderType: data.orderType || 'dinein',
+      tableNumber: data.tableNumber?.trim() || '',
       items: data.items,
       total: data.total,
       createdAt: new Date().toISOString()
     }
     await put('orders', order)
     return order
+  }
+
+  FP.getOrdersForDate = async (date = new Date()) => {
+    const orders = await getAll('orders')
+    const start = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const end = new Date(start)
+    end.setDate(end.getDate() + 1)
+    return orders
+      .filter((o) => {
+        const d = new Date(o.createdAt)
+        return d >= start && d < end
+      })
+      .sort((a, b) => a.orderNumber - b.orderNumber)
+  }
+
+  FP.getDailyClosing = async () => {
+    const orders = await FP.getOrdersForDate(new Date())
+    const byPayment = { cash: 0, card: 0, delivery: 0 }
+    const byOrderType = { dinein: 0, takeaway: 0, delivery: 0 }
+    let totalRevenue = 0
+
+    orders.forEach((o) => {
+      totalRevenue += o.total
+      const pt = o.paymentType || 'cash'
+      if (byPayment[pt] !== undefined) byPayment[pt] += o.total
+      const ot = o.orderType || 'dinein'
+      if (byOrderType[ot] !== undefined) byOrderType[ot] += o.total
+    })
+
+    return {
+      date: new Date(),
+      orderCount: orders.length,
+      totalRevenue,
+      byPayment,
+      byOrderType,
+      orders
+    }
   }
 
   FP.getStats = async () => {

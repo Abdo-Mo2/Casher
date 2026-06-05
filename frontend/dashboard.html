@@ -70,6 +70,22 @@
         </div>
         <p id="backup-info" class="backup-info"></p>
       </div>
+
+      <div class="card settings-card">
+        <h2 class="section-title">تصدير المبيعات (Excel / CSV)</h2>
+        <p class="settings-hint">ملف CSV يفتح في Excel — يحتوي الطلبات والتفاصيل.</p>
+        <div class="backup-actions">
+          <button type="button" id="export-csv-today" class="btn">تصدير مبيعات اليوم</button>
+          <button type="button" id="export-csv-all" class="btn btn-secondary">تصدير كل المبيعات</button>
+        </div>
+      </div>
+
+      <div class="card settings-card">
+        <h2 class="section-title">تقرير إغلاق يومي (G)</h2>
+        <p class="settings-hint">ملخص طلبات اليوم حسب الدفع ونوع الطلب — للطباعة.</p>
+        <div id="closing-preview" class="closing-preview"></div>
+        <button type="button" id="print-closing-btn" class="btn">طباعة تقرير الإغلاق</button>
+      </div>
     </div>
 
     <div class="card chart-card">
@@ -82,10 +98,11 @@
       <thead>
         <tr>
           <th>رقم الطلب</th>
+          <th>النوع</th>
+          <th>الدفع</th>
           <th>الكاشير</th>
-          <th>عدد الأصناف</th>
           <th>الإجمالي</th>
-          <th>التاريخ والوقت</th>
+          <th>التاريخ</th>
         </tr>
       </thead>
       <tbody id="orders-tbody"></tbody>
@@ -94,6 +111,8 @@
 
   <script src="js/vendor/chart.umd.min.js"></script>
   <script src="js/categories.js"></script>
+  <script src="js/labels.js"></script>
+  <script src="js/reports.js"></script>
   <script src="js/db.js"></script>
   <script src="js/alerts.js"></script>
   <script src="js/api.js"></script>

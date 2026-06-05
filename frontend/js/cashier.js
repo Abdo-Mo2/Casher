@@ -1,16 +1,22 @@
 ;(function () {
   const FP = window.FastPOS
   const CASHIER_KEY = 'fastpos_cashier_name'
+  const LAST_ORDER_KEY = 'fastpos_last_order'
   const cart = []
   let products = []
   let activeCategory = 'الكل'
+  let paymentType = 'cash'
+  let orderType = 'dinein'
 
   const productGrid = document.getElementById('product-grid')
   const categoryFilters = document.getElementById('category-filters')
   const cartItemsEl = document.getElementById('cart-items')
   const cartTotalEl = document.getElementById('cart-total')
   const confirmBtn = document.getElementById('confirm-btn')
+  const reprintBtn = document.getElementById('reprint-btn')
   const cashierInput = document.getElementById('cashier-name')
+  const tableNumberInput = document.getElementById('table-number')
+  const tableNumberWrap = document.getElementById('table-number-wrap')
   const modal = document.getElementById('receipt-modal')
 
   const savedCashier = localStorage.getItem(CASHIER_KEY)
@@ -19,6 +25,38 @@
   cashierInput.addEventListener('input', () => {
     localStorage.setItem(CASHIER_KEY, cashierInput.value.trim())
   })
+
+  function initOptionChips(containerId, onSelect) {
+    const container = document.getElementById(containerId)
+    if (!container) return
+    container.querySelectorAll('.option-chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('.option-chip').forEach((b) => b.classList.remove('active'))
+        btn.classList.add('active')
+        onSelect(btn.dataset.value)
+      })
+    })
+  }
+
+  initOptionChips('order-type-chips', (val) => {
+    orderType = val
+    if (tableNumberWrap) {
+      tableNumberWrap.style.display = val === 'dinein' ? 'block' : 'none'
+    }
+  })
+
+  initOptionChips('payment-type-chips', (val) => {
+    paymentType = val
+  })
+
+  if (tableNumberWrap) tableNumberWrap.style.display = 'block'
+
+  function updateReprintButton() {
+    if (!reprintBtn) return
+    reprintBtn.disabled = !localStorage.getItem(LAST_ORDER_KEY)
+  }
+
+  updateReprintButton()
 
   function formatPrice(n) {
     return `${n} جنيه`
@@ -102,9 +140,7 @@
     const item = cart.find((c) => c.productId === productId)
     if (!item) return
     item.quantity += delta
-    if (item.quantity <= 0) {
-      cart.splice(cart.indexOf(item), 1)
-    }
+    if (item.quantity <= 0) cart.splice(cart.indexOf(item), 1)
     renderCart()
   }
 
@@ -166,42 +202,37 @@
     const qrEl = document.getElementById('qrcode')
     const serialEl = document.getElementById('receipt-serial')
     const serial = formatSerial(order)
-
     qrEl.innerHTML = ''
     if (serialEl) serialEl.textContent = serial
-
-    if (!window.QRCode) {
-      if (serialEl) serialEl.textContent = serial
-      return
-    }
-
+    if (!window.QRCode) return
     try {
-      new window.QRCode(qrEl, {
-        text: qrPayload(order),
-        width: 200,
-        height: 200
-      })
-      const img = qrEl.querySelector('img')
-      const canvas = qrEl.querySelector('canvas')
-      if (img) img.alt = `طلب ${serial}`
-      if (canvas) canvas.setAttribute('aria-label', `طلب ${serial}`)
+      new window.QRCode(qrEl, { text: qrPayload(order), width: 200, height: 200 })
     } catch {
       qrEl.innerHTML = '<p class="qr-fallback">رمز غير متاح</p>'
     }
   }
 
+  function orderMetaLine(order) {
+    const parts = [
+      `النوع: ${FP.labelOrderType(order.orderType)}`,
+      `الدفع: ${FP.labelPayment(order.paymentType)}`
+    ]
+    if (order.tableNumber) parts.push(`طاولة: ${order.tableNumber}`)
+    return parts.join(' · ')
+  }
+
   async function showReceipt(order) {
     const date = new Date(order.createdAt)
-    const shopName = FP.getShopName()
-    document.getElementById('receipt-shop-name').textContent = shopName
+    const settings = await FP.getSettings()
+    document.getElementById('receipt-shop-name').textContent = FP.getShopName()
     const phoneEl = document.getElementById('receipt-shop-phone')
     const addrEl = document.getElementById('receipt-shop-address')
-    const settings = await FP.getSettings()
     phoneEl.textContent = settings.shopPhone ? `هاتف: ${settings.shopPhone}` : ''
     addrEl.textContent = settings.shopAddress || ''
     phoneEl.style.display = settings.shopPhone ? 'block' : 'none'
     addrEl.style.display = settings.shopAddress ? 'block' : 'none'
     document.getElementById('receipt-cashier').textContent = `الكاشير: ${order.cashierName}`
+    document.getElementById('receipt-order-meta').textContent = orderMetaLine(order)
     document.getElementById('receipt-order-num').textContent = `طلب رقم #${order.orderNumber}`
     document.getElementById('receipt-datetime').textContent = date.toLocaleString('ar-EG')
     document.getElementById('receipt-items').innerHTML = order.items
@@ -211,14 +242,17 @@
       )
       .join('')
     document.getElementById('receipt-total').textContent = formatPrice(order.total)
-
     renderReceiptQR(order)
     modal.classList.add('open')
   }
 
+  function saveLastOrder(order) {
+    localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order))
+    updateReprintButton()
+  }
+
   async function confirmOrder() {
     if (cart.length === 0) return
-
     const cashierName = cashierInput.value.trim()
     if (!cashierName) {
       cashierInput.focus()
@@ -229,6 +263,9 @@
     try {
       const order = await FP.createOrder({
         cashierName,
+        paymentType,
+        orderType,
+        tableNumber: orderType === 'dinein' ? tableNumberInput?.value : '',
         items: cart.map((c) => ({
           productId: c.productId,
           name: c.name,
@@ -238,6 +275,7 @@
         total: getTotal()
       })
       localStorage.setItem(CASHIER_KEY, cashierName)
+      saveLastOrder(order)
       cart.length = 0
       renderCart()
       await showReceipt(order)
@@ -246,7 +284,21 @@
     }
   }
 
+  async function reprintLastOrder() {
+    const raw = localStorage.getItem(LAST_ORDER_KEY)
+    if (!raw) {
+      FP.toastError('لا توجد فاتورة سابقة')
+      return
+    }
+    try {
+      await showReceipt(JSON.parse(raw))
+    } catch {
+      FP.toastError('تعذر قراءة آخر فاتورة')
+    }
+  }
+
   document.getElementById('confirm-btn').addEventListener('click', confirmOrder)
+  reprintBtn?.addEventListener('click', reprintLastOrder)
   document.getElementById('close-btn').addEventListener('click', () => modal.classList.remove('open'))
   document.getElementById('print-btn').addEventListener('click', () => window.print())
   modal.addEventListener('click', (e) => {

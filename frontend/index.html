@@ -32,11 +32,30 @@
           <div id="cart-items" class="cart-items">
             <p class="cart-empty">السلة فارغة</p>
           </div>
+          <div class="cart-options">
+            <label class="option-label">نوع الطلب</label>
+            <div class="option-chips" id="order-type-chips">
+              <button type="button" class="option-chip active" data-value="dinein">صالة</button>
+              <button type="button" class="option-chip" data-value="takeaway">تيك أواي</button>
+              <button type="button" class="option-chip" data-value="delivery">دليفري</button>
+            </div>
+            <div id="table-number-wrap" class="form-group table-field">
+              <label for="table-number">رقم الطاولة</label>
+              <input type="text" id="table-number" placeholder="مثال: 5">
+            </div>
+            <label class="option-label">طريقة الدفع</label>
+            <div class="option-chips" id="payment-type-chips">
+              <button type="button" class="option-chip active" data-value="cash">نقدي</button>
+              <button type="button" class="option-chip" data-value="card">بطاقة</button>
+              <button type="button" class="option-chip" data-value="delivery">دليفري</button>
+            </div>
+          </div>
           <div class="cart-total">
             <span>الإجمالي</span>
             <span id="cart-total">0 جنيه</span>
           </div>
           <button id="confirm-btn" class="btn btn-full" disabled>تأكيد الطلب</button>
+          <button type="button" id="reprint-btn" class="btn btn-secondary btn-full" disabled>إعادة طباعة آخر فاتورة</button>
         </div>
       </aside>
     </div>
@@ -49,6 +68,7 @@
         <p class="receipt-meta" id="receipt-shop-phone"></p>
         <p class="receipt-meta" id="receipt-shop-address"></p>
         <p class="receipt-meta" id="receipt-cashier"></p>
+        <p class="receipt-meta" id="receipt-order-meta"></p>
         <p class="receipt-meta" id="receipt-order-num"></p>
         <p class="receipt-meta" id="receipt-datetime"></p>
       </div>
@@ -70,6 +90,8 @@
 
   <script src="js/vendor/qrcode.min.js"></script>
   <script src="js/categories.js"></script>
+  <script src="js/labels.js"></script>
+  <script src="js/reports.js"></script>
   <script src="js/db.js"></script>
   <script src="js/alerts.js"></script>
   <script src="js/api.js"></script>

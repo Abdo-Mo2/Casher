@@ -688,6 +688,120 @@ textarea:focus {
   color: #888;
 }
 
+.cart-options {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.option-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.option-chip {
+  flex: 1;
+  min-width: 70px;
+  padding: 8px 6px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.15s;
+}
+
+.option-chip.active {
+  background: #ff6b35;
+  color: #fff;
+  border-color: #ff6b35;
+}
+
+.table-field {
+  margin: 0;
+}
+
+.table-field input {
+  padding: 6px 10px;
+}
+
+.closing-preview {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.closing-preview-mini {
+  color: #666;
+  margin-top: 6px;
+  font-size: 0.85rem;
+}
+
+.closing-print-host {
+  display: none;
+}
+
+.closing-print-host.active {
+  display: block;
+}
+
+.closing-report {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 24px;
+  text-align: center;
+}
+
+.closing-report h2 {
+  margin-bottom: 8px;
+}
+
+.closing-subtitle {
+  font-weight: 600;
+  color: #ff6b35;
+}
+
+.closing-summary {
+  text-align: right;
+  margin: 16px 0;
+  line-height: 1.8;
+}
+
+.closing-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 16px;
+  font-size: 0.9rem;
+}
+
+.closing-table th,
+.closing-table td {
+  border: 1px solid #e0e0e0;
+  padding: 6px 8px;
+  text-align: right;
+}
+
+.closing-table th {
+  background: #fafafa;
+}
+
+.closing-footer {
+  margin-top: 16px;
+  font-size: 0.8rem;
+  color: #888;
+}
+
 .hidden {
   display: none !important;
 }
@@ -797,6 +911,17 @@ textarea:focus {
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 auto;
+  }
+
+  body.printing-closing .sidebar,
+  body.printing-closing .main-content,
+  body.printing-closing #receipt-modal {
+    display: none !important;
+  }
+
+  body.printing-closing .closing-print-host.active {
+    display: block !important;
+    position: static !important;
   }
 
   .modal-actions,
