@@ -693,27 +693,49 @@ textarea:focus {
   justify-content: center;
 }
 
+.qr-fallback {
+  font-size: 0.9rem;
+  text-align: center;
+  color: #666;
+  padding: 12px;
+}
+
 /* Print */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-
-  .receipt-print,
-  .receipt-print * {
-    visibility: visible;
-  }
-
-  .receipt-print {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
+  body {
+    background: #fff;
   }
 
   .sidebar,
+  .main-content,
+  .cashier-layout,
+  .cart-section,
+  .products-section {
+    display: none !important;
+  }
+
+  #receipt-modal {
+    display: block !important;
+    position: static !important;
+    background: none !important;
+    inset: auto !important;
+  }
+
+  #receipt-modal .modal-card {
+    box-shadow: none !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 auto;
+  }
+
   .modal-actions,
   .no-print {
     display: none !important;
+  }
+
+  #qrcode img,
+  #qrcode canvas {
+    max-width: 120px;
+    height: auto;
   }
 }

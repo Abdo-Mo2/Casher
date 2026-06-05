@@ -154,6 +154,29 @@
     cartTotalEl.textContent = formatPrice(getTotal())
   }
 
+  function qrPayload(order) {
+    return `FastPOS|#${order.orderNumber}|${order.total}|${order.cashierName}`
+  }
+
+  function renderReceiptQR(order) {
+    const qrEl = document.getElementById('qrcode')
+    qrEl.innerHTML = ''
+    if (!window.QRCode) return
+
+    try {
+      new window.QRCode(qrEl, {
+        text: qrPayload(order),
+        width: 128,
+        height: 128
+      })
+    } catch {
+      qrEl.innerHTML =
+        '<p class="qr-fallback">طلب #' +
+        order.orderNumber +
+        '<br><small>رمز QR غير متاح</small></p>'
+    }
+  }
+
   async function showReceipt(order) {
     const date = new Date(order.createdAt)
     document.getElementById('receipt-cashier').textContent = `الكاشير: ${order.cashierName}`
@@ -167,16 +190,7 @@
       .join('')
     document.getElementById('receipt-total').textContent = formatPrice(order.total)
 
-    const qrEl = document.getElementById('qrcode')
-    qrEl.innerHTML = ''
-    if (window.QRCode) {
-      new window.QRCode(qrEl, {
-        text: JSON.stringify(order),
-        width: 150,
-        height: 150
-      })
-    }
-
+    renderReceiptQR(order)
     modal.classList.add('open')
   }
 
